@@ -273,6 +273,7 @@ async function register(){
     if(!res.ok) throw new Error(data.detail || 'Failed to send OTP');
 
     _email = email;
+localStorage.setItem("otp_email", email);
     document.getElementById('otpEmailDisplay').textContent = email;
     document.getElementById('otpOverlay').classList.add('show');
     document.getElementById('o1').focus();
@@ -304,23 +305,37 @@ async function resendOtp(){
 
 async function verifyOtp(){
   const otp = otpIds.map(id => document.getElementById(id).value).join('');
-  if(otp.length < 6){ showToast('otpToast','Enter the full 6-digit code.'); return; }
+
+  if(otp.length < 6){
+    showToast('otpToast','Enter the full 6-digit code.');
+    return;
+  }
+
+  // ✅ FIX: get email from localStorage
+  const emailStored = localStorage.getItem("otp_email");
+
+  console.log("VERIFY EMAIL:", emailStored);
+  console.log("VERIFY OTP:", otp);
 
   const btn = document.getElementById('verifyBtn');
   btn.disabled = true;
   btn.textContent = 'Verifying…';
 
   try {
-    // Step 1: verify OTP
+    // ✅ Step 1: verify OTP
     const verifyRes = await fetch(`${API}/verify-otp`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({email: _email, otp})
+      body: JSON.stringify({
+        email: emailStored,
+        otp: otp
+      })
     });
+
     const verifyData = await verifyRes.json();
     if(!verifyRes.ok) throw new Error(verifyData.detail || 'Verification failed');
 
-    // Step 2: register the account
+    // ✅ Step 2: register account
     const fname = document.getElementById('fname').value.trim();
     const lname = document.getElementById('lname').value.trim();
     const password = document.getElementById('password').value;
@@ -333,24 +348,29 @@ async function verifyOtp(){
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         name: fname + ' ' + lname,
-        email: _email,
+        email: emailStored, // ✅ FIXED
         password,
         phone,
         address,
         gender
       })
     });
+
     const regData = await regRes.json();
     if(!regRes.ok) throw new Error(regData.detail || regData.message || 'Registration failed');
 
     // Store and redirect
     localStorage.setItem('name', fname + ' ' + lname);
-    localStorage.setItem('user', _email);
+    localStorage.setItem('user', emailStored); // ✅ FIXED
+
     if(regData.token) localStorage.setItem('token', regData.token);
     if(regData.access_token) localStorage.setItem('token', regData.access_token);
 
     showToast('otpToast', 'Account created! Redirecting…', 'success');
-    setTimeout(() => { window.location.href = 'login.html'; }, 1200);
+
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 1200);
 
   } catch(err){
     showToast('otpToast', err.message, 'error');
