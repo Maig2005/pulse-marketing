@@ -152,18 +152,37 @@ def verify_otp(payload: OTPVerify):
     del _otp_store[email]
 
     return {"status": "verified"}
-@app.post("/register")
-def register_user(payload: dict):
-    print("📥 REGISTER DATA:", payload)
+from models import User
 
+@app.post("/register")
+def register_user(payload: dict, db: Session = Depends(get_db)):
     name = payload.get("name")
     email = payload.get("email")
     password = payload.get("password")
+    phone = payload.get("phone")
+    address = payload.get("address")
+    gender = payload.get("gender")
 
     if not name or not email or not password:
         raise HTTPException(status_code=400, detail="Missing required fields")
 
-    # 👉 For now just return success (you can store in DB later)
+    # Check if user already exists
+    existing = db.query(User).filter(User.email == email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="User already exists")
+
+    user = User(
+        name=name,
+        email=email,
+        password=password,
+        phone=phone,
+        address=address,
+        gender=gender
+    )
+
+    db.add(user)
+    db.commit()
+
     return {
         "message": "User registered successfully",
         "token": "dummy_token_123"
@@ -204,7 +223,24 @@ def get_analytics(db: Session = Depends(get_db)):
         "clicks": sum(1 for e in events if e.event_type == "click"),
         "page_views": sum(1 for e in events if e.event_type == "page_view"),
     }
+@app.post("/login")
+def login_user(payload: dict, db: Session = Depends(get_db)):
+    email = payload.get("email")
+    password = payload.get("password")
 
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.password != password:
+        raise HTTPException(status_code=401, detail="Incorrect password")
+
+    return {
+        "message": "Login successful",
+        "token": "dummy_token_123",
+        "name": user.name
+    }
 # ─────────────────────────────────────────────────────
 # ENTRY POINT
 # ─────────────────────────────────────────────────────
