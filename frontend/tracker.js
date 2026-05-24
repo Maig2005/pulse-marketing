@@ -115,5 +115,5 @@ function handleCTA() {
   }).catch(() => {});
 
   alert("Redirecting to your offer...");
-  setTimeout(() => { window.location.href = "https://example.com"; }, 1000);
+  setTimeout(() => { window.location.href = "https://amazon.com"; }, 1000);
 }
