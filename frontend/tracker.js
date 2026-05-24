@@ -36,7 +36,7 @@
   function getDecision() {
     const sessionId = getSessionId();
 
-    fetch(API + "/decision/" + sessionId)
+    fetch("https://pulse-marketing.onrender.com/decision/" + sessionId)
       .then(res => {
         if (!res.ok) throw new Error("Non-OK response");
         return res.json();
@@ -104,15 +104,18 @@
 // ----------------------------
 function handleCTA() {
   fetch("https://pulse-marketing.onrender.com/track", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      event_type: "cta_click",
-      timestamp: Date.now(),
-      page: window.location.pathname,
-      session_id: localStorage.getItem("session_id")
-    })
-  }).catch(() => {});
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    session_id: sessionId,
+    event_type: "click",
+    page_url: window.location.href,
+    timestamp: new Date().toISOString()
+  })
+});
+  
 
   alert("Redirecting to your offer...");
   setTimeout(() => { window.location.href = "https://amazon.com"; }, 1000);
