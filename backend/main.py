@@ -49,6 +49,10 @@ SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 SMTP_USER = os.getenv("SMTP_USER")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+if not SMTP_USER or not SMTP_PASSWORD:
+    print("❌ SMTP ENV NOT LOADED")
+else:
+    print("✅ SMTP LOADED:", SMTP_USER)
 SENDER_NAME = "Pulse Marketing"
 
 # ── In-memory OTP store  { email: { "otp": "1234", "expires": timestamp } } ──
@@ -84,34 +88,33 @@ class OTPVerify(BaseModel):
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _send_otp_email(to_email: str, otp: str, purpose: str = "verification"):
-    print("SMTP USER:", SMTP_USER)
-    print("SMTP PASS:", SMTP_PASSWORD)
-
-    subject = f"Pulse OTP for {purpose}"
-    body = f"Your OTP is: {otp}"
-
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = SMTP_USER
-    msg["To"] = to_email
-
     try:
+        print("📧 Sending OTP to:", to_email)
+
+        subject = "Pulse OTP Verification"
+        body = f"Your OTP is: {otp}"
+
+        msg = MIMEText(body)
+        msg["Subject"] = subject
+        msg["From"] = SMTP_USER
+        msg["To"] = to_email
+
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
-        print("Connecting to SMTP...")
 
+        print("🔐 Logging in SMTP...")
         server.login(SMTP_USER, SMTP_PASSWORD)
-        print("LOGIN SUCCESS")
 
+        print("📤 Sending email...")
         server.sendmail(SMTP_USER, to_email, msg.as_string())
-        print("EMAIL SENT")
 
         server.quit()
 
-    except Exception as e:
-        print("EMAIL ERROR:", str(e))
-        raise
+        print("✅ EMAIL SENT SUCCESSFULLY")
 
+    except Exception as e:
+        print("❌ EMAIL ERROR:", str(e))
+        raise Exception(str(e))
 # ══════════════════════════════════════════════════════════════════════════════
 # OTP ENDPOINTS
 # ══════════════════════════════════════════════════════════════════════════════
