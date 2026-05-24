@@ -174,13 +174,42 @@ function togglePwd(){
   const p=document.getElementById('password');
   p.type=p.type==='password'?'text':'password';
 }
-function login(){
-  const email=document.getElementById('email').value.trim();
-  const err=document.getElementById('err');
-  err.classList.remove('show');
-  if(!email){ err.classList.add('show'); return; }
-  localStorage.setItem('user',email);
-  window.location.href='marketing-dashboard-1.html';
+async function login(){
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const err = document.getElementById("err");
+
+  err.classList.remove("show");
+
+  if(!email || !password){
+    err.classList.add("show");
+    return;
+  }
+
+  try{
+    const res = await fetch("https://your-render-url.onrender.com/login", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({email, password})
+    });
+
+    const data = await res.json();
+
+    if(data.error){
+      err.classList.add("show");
+      return;
+    }
+
+    localStorage.setItem("user", data.email);
+    localStorage.setItem("name", data.name);
+
+    window.location.href = "marketing-dashboard-1.html";
+
+  }catch(e){
+    console.error(e);
+    err.classList.add("show");
+  }
 }
 document.getElementById('password').addEventListener('keydown',e=>{
   if(e.key==='Enter') login();
