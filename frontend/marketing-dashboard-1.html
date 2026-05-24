@@ -321,6 +321,13 @@
 /* ---------- DATA ---------- */
 const name = localStorage.getItem("name") || "User";
 
+function authHeaders(){
+  const token = localStorage.getItem("token");
+  const h = {"Content-Type":"application/json"};
+  if(token) h["Authorization"] = "Bearer " + token;
+  return h;
+}
+
 const hour = new Date().getHours();
 let greeting = "Hello";
 
@@ -332,8 +339,12 @@ document.getElementById("greeting").innerText = `${greeting}, ${name}`;
 let backendData = null;
 
 async function fetchBackend(){
-  const res = await fetch("http://127.0.0.1:8000/analytics");
-  backendData = await res.json();
+  try {
+    const res = await fetch("https://pulse-marketing.onrender.com/analytics");
+    if(res.ok) backendData = await res.json();
+  } catch(e) {
+    console.warn("Backend unavailable, using demo data:", e.message);
+  }
 }
 const RNG = (s)=>()=> (s=(s*9301+49297)%233280)/233280;
 const channels = ["Organic","Paid","Social","Direct","Referral","Email"];
@@ -497,9 +508,12 @@ function renderFunnel(){
 }
 
 async function renderCampaigns(){
-
-  const res = await fetch("http://127.0.0.1:8000/campaigns");
-  const data = await res.json();
+  let data = [];
+  try {
+    const res = await fetch("https://pulse-marketing.onrender.com/campaigns");
+    if(res.ok) data = await res.json();
+  } catch(e) { return; }
+  if(!data.length) return;
 
   document.getElementById('campaigns').innerHTML = data.map(c => {
 
@@ -575,8 +589,12 @@ function renderInsights(){
     </div>`).join('');
 }
 async function loadInsights(){
-  const res = await fetch("http://127.0.0.1:8000/campaign-insights");
-  const data = await res.json();
+  let data = {};
+  try {
+    const res = await fetch("https://pulse-marketing.onrender.com/campaign-insights");
+    if(res.ok) data = await res.json();
+    else return;
+  } catch(e) { return; }
 
   document.getElementById("aiInsights").innerHTML = data.insights.map(i => `
     <div style="
@@ -653,18 +671,20 @@ init();
 let lastData = null;
 
 setInterval(async () => {
-  const res = await fetch("http://127.0.0.1:8000/analytics");
-  const newData = await res.json();
-
-  if (JSON.stringify(newData) !== JSON.stringify(lastData)) {
-  backendData = newData;
-  renderAll();
-  loadCampaigns();
-  loadInsights();
-  lastData = newData;
-  
-}
-
+  try {
+    const res = await fetch("https://pulse-marketing.onrender.com/analytics");
+    if(!res.ok) return;
+    const newData = await res.json();
+    if (JSON.stringify(newData) !== JSON.stringify(lastData)) {
+      backendData = newData;
+      renderAll();
+      loadCampaigns();
+      loadInsights();
+      lastData = newData;
+    }
+  } catch(e) {
+    // silently skip failed polls
+  }
 }, 5000);
 setTimeout(()=>ask('Summarise this week'),600);
 
@@ -839,8 +859,11 @@ function logout(){
 }
 
 async function loadCampaigns(){
-  const res = await fetch("http://127.0.0.1:8000/campaigns");
-  const data = await res.json();
+  let data = [];
+  try {
+    const res = await fetch("https://pulse-marketing.onrender.com/campaigns");
+    if(res.ok) data = await res.json();
+  } catch(e) { return; }
 
   document.getElementById("campaignList").innerHTML = data.map(c => `
   
@@ -889,9 +912,9 @@ async function createCampaign(){
   }
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/campaign", {
+    const res = await fetch("https://pulse-marketing.onrender.com/campaign", {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
+      headers: authHeaders(),
       body: JSON.stringify({name, budget})
     });
 
@@ -951,7 +974,7 @@ async function renderCampaignSection(){
 
   let data = [];
   try {
-    const res = await fetch("http://127.0.0.1:8000/campaigns");
+    const res = await fetch("https://pulse-marketing.onrender.com/campaigns");
     data = await res.json();
   } catch(e) {
     // fallback demo data if backend unavailable
@@ -1083,7 +1106,7 @@ function renderReports(){
   });
 
   // ✅ TABLE
-  fetch("http://127.0.0.1:8000/campaigns")
+  fetch("https://pulse-marketing.onrender.com/campaigns")
     .then(res => res.json())
     .then(data => {
       document.getElementById("reportTable").innerHTML = data.map(c => `
@@ -1104,10 +1127,10 @@ async function deleteCampaign(id){
 
   if(!confirm("Delete this campaign?")) return;
 
-  await fetch(`http://127.0.0.1:8000/campaign/${id}`, {
+  const delRes = await fetch(`https://pulse-marketing.onrender.com/campaign/${id}`, {
     method: "DELETE"
   });
-
+  if(!delRes.ok){ alert("Failed to delete campaign"); return; }
   alert("Campaign deleted");
 
   await loadCampaigns();
@@ -1123,9 +1146,9 @@ async function editCampaign(id){
     return;
   }
 
-  await fetch(`http://127.0.0.1:8000/campaign/${id}`, {
+  await fetch(`https://pulse-marketing.onrender.com/campaign/${id}`, {
     method: "PUT",
-    headers: {"Content-Type":"application/json"},
+    headers: authHeaders(),
     body: JSON.stringify({
       name: newName,
       budget: newBudget

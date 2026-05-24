@@ -188,7 +188,7 @@ select option{background:var(--panel-2);color:var(--fg);}
 </div>
 
 <script>
-const API = "https://your-render-url.onrender.com";
+const API = "https://pulse-marketing.onrender.com";
 let _email = "";
 let _resendTimer = null;
 
@@ -255,7 +255,8 @@ async function register(){
   const email = document.getElementById('email').value.trim();
   const pwd   = document.getElementById('password').value;
 
-  if(!fname || !lname || !email){ showToast('toast','Please fill in all required fields.'); return; }
+  if(!fname || !lname || !email){ showToast('toast','Please fill in your name and email.'); return; }
+  if(!email.includes('@')){ showToast('toast','Please enter a valid email address.'); return; }
   if(pwd.length < 8){ showToast('toast','Password must be at least 8 characters.'); return; }
 
   const btn = document.getElementById('registerBtn');
@@ -310,18 +311,46 @@ async function verifyOtp(){
   btn.textContent = 'Verifying…';
 
   try {
-    const res = await fetch(`${API}/verify-otp`,{
+    // Step 1: verify OTP
+    const verifyRes = await fetch(`${API}/verify-otp`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({email: _email, otp})
     });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.detail || 'Verification failed');
+    const verifyData = await verifyRes.json();
+    if(!verifyRes.ok) throw new Error(verifyData.detail || 'Verification failed');
 
-    const name = document.getElementById('fname').value.trim() + ' ' + document.getElementById('lname').value.trim();
-    localStorage.setItem('name', name);
+    // Step 2: register the account
+    const fname = document.getElementById('fname').value.trim();
+    const lname = document.getElementById('lname').value.trim();
+    const password = document.getElementById('password').value;
+    const phone = document.getElementById('phone').value.trim();
+    const address = document.getElementById('address').value.trim();
+    const gender = document.getElementById('gender').value;
+
+    const regRes = await fetch(`${API}/register`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name: fname + ' ' + lname,
+        email: _email,
+        password,
+        phone,
+        address,
+        gender
+      })
+    });
+    const regData = await regRes.json();
+    if(!regRes.ok) throw new Error(regData.detail || regData.message || 'Registration failed');
+
+    // Store and redirect
+    localStorage.setItem('name', fname + ' ' + lname);
     localStorage.setItem('user', _email);
-    window.location.href = 'login.html';
+    if(regData.token) localStorage.setItem('token', regData.token);
+    if(regData.access_token) localStorage.setItem('token', regData.access_token);
+
+    showToast('otpToast', 'Account created! Redirecting…', 'success');
+    setTimeout(() => { window.location.href = 'login.html'; }, 1200);
 
   } catch(err){
     showToast('otpToast', err.message, 'error');

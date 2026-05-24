@@ -175,20 +175,24 @@ function togglePwd(){
   p.type=p.type==='password'?'text':'password';
 }
 async function login(){
-
-  const email = document.getElementById("email").value;
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
   const err = document.getElementById("err");
+  const btn = document.querySelector(".btn");
 
   err.classList.remove("show");
 
   if(!email || !password){
+    err.textContent = "Please enter your email and password.";
     err.classList.add("show");
     return;
   }
 
+  btn.disabled = true;
+  btn.textContent = "Signing in…";
+
   try{
-    const res = await fetch("https://your-render-url.onrender.com/login", {
+    const res = await fetch("https://pulse-marketing.onrender.com/login", {
       method: "POST",
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({email, password})
@@ -196,19 +200,27 @@ async function login(){
 
     const data = await res.json();
 
-    if(data.error){
+    if(!res.ok){
+      err.textContent = data.detail || data.message || "Invalid email or password. Please try again.";
       err.classList.add("show");
       return;
     }
 
-    localStorage.setItem("user", data.email);
-    localStorage.setItem("name", data.name);
+    // Store user info — support both {email, name} and {user, token} shapes
+    localStorage.setItem("user", data.email || email);
+    localStorage.setItem("name", data.name || data.full_name || email.split("@")[0]);
+    if(data.token) localStorage.setItem("token", data.token);
+    if(data.access_token) localStorage.setItem("token", data.access_token);
 
     window.location.href = "marketing-dashboard-1.html";
 
   }catch(e){
     console.error(e);
+    err.textContent = "Unable to reach the server. Please try again.";
     err.classList.add("show");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Sign in";
   }
 }
 document.getElementById('password').addEventListener('keydown',e=>{
