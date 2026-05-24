@@ -152,7 +152,22 @@ def verify_otp(payload: OTPVerify):
     del _otp_store[email]
 
     return {"status": "verified"}
+@app.post("/register")
+def register_user(payload: dict):
+    print("📥 REGISTER DATA:", payload)
 
+    name = payload.get("name")
+    email = payload.get("email")
+    password = payload.get("password")
+
+    if not name or not email or not password:
+        raise HTTPException(status_code=400, detail="Missing required fields")
+
+    # 👉 For now just return success (you can store in DB later)
+    return {
+        "message": "User registered successfully",
+        "token": "dummy_token_123"
+    }
 # ─────────────────────────────────────────────────────
 # TRACKING
 # ─────────────────────────────────────────────────────
