@@ -219,7 +219,7 @@ def track_event(payload: TrackPayload, db: Session = Depends(get_db)):
 # DECISION ENGINE
 # ══════════════════════════════════════════════════════════════════════════════
 
-@app.get("/decision/{session_id}")
+"""@app.get("/decision/{session_id}")
 def get_decision(session_id: str, db: Session = Depends(get_db)):
     events = db.query(Event).filter(Event.session_id == session_id).all()
     total  = len(events)
@@ -241,8 +241,13 @@ def get_decision(session_id: str, db: Session = Depends(get_db)):
         return {"action": "show_chatbot", "message": ""}
 
     return {"action": "no_action", "message": ""}
-
-
+""" 
+@app.get("/decision/{session_id}")
+def get_decision(session_id: str):
+    return {
+        "action": "show_offer",
+        "message": "🔥 Grab this exclusive deal just for you!"
+    }
 # ══════════════════════════════════════════════════════════════════════════════
 # ANALYTICS
 # ══════════════════════════════════════════════════════════════════════════════
