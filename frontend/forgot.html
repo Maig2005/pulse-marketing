@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pulse — Reset Password</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d12;--panel:#11141b;--panel-2:#161a23;--border:#1f2430;
+  --fg:#e6e9ef;--muted:#8a93a6;--accent:#10b981;--accent-2:#3b82f6;--danger:#ef4444;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:'Sora',sans-serif;overflow:hidden;}
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(16,185,129,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,0.04) 1px,transparent 1px);background-size:48px 48px;}
+.bg-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:700px;height:500px;z-index:0;pointer-events:none;background:radial-gradient(ellipse,rgba(16,185,129,0.10) 0%,transparent 70%);}
+.page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;}
+header{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:10px;flex-shrink:0;}
+.logo-box{width:28px;height:28px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;}
+.logo-box span{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:#04130c;}
+.logo-name{font-weight:600;font-size:15px;letter-spacing:-0.02em;}
+.logo-chip{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--panel-2);border:1px solid var(--border);color:var(--muted);}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 20px;}
+.card{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:36px 32px;animation:rise .45s cubic-bezier(.16,1,.3,1) both;}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.step{display:none;}.step.active{display:block;}
+.icon-ring{width:52px;height:52px;border-radius:14px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:20px;}
+h1{font-size:22px;font-weight:600;letter-spacing:-0.03em;margin-bottom:6px;}
+.sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px;}
+.sub b{color:var(--fg);font-weight:500;}
+label{display:block;font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.field{margin-bottom:20px;}
+.input-wrap{position:relative;}
+input{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;font-family:'Sora',sans-serif;color:var(--fg);outline:none;transition:border-color .2s;}
+input:focus{border-color:var(--accent);}
+input::placeholder{color:var(--muted);}
+.btn{width:100%;padding:11px;border:none;border-radius:8px;background:var(--accent);color:#04130c;font-size:14px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;transition:all .2s;}
+.btn:hover{background:#0ea572;transform:translateY(-1px);}
+.btn:active{transform:none;}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-ghost{width:100%;padding:11px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--fg);font-size:14px;font-family:'Sora',sans-serif;cursor:pointer;transition:all .2s;margin-top:10px;}
+.btn-ghost:hover{background:var(--panel-2);}
+.otp-group{display:flex;gap:10px;justify-content:center;margin-bottom:20px;}
+.otp-box{width:48px;height:56px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--fg);outline:none;transition:border-color .2s;}
+.otp-box:focus{border-color:var(--accent);}
+.strength-bar{display:flex;gap:4px;margin-top:8px;}
+.strength-bar div{flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s;}
+.hint{font-size:11px;color:var(--muted);margin-top:6px;}
+.success-icon{width:64px;height:64px;border-radius:50%;background:rgba(16,185,129,0.15);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;animation:pop .5s cubic-bezier(.16,1,.3,1) both;}
+@keyframes pop{from{transform:scale(0.4);opacity:0}to{transform:scale(1);opacity:1}}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);text-decoration:none;margin-top:20px;transition:color .2s;}
+.back:hover{color:var(--accent);}
+.toast{display:none;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px;}
+.toast.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--danger);}
+.toast.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--accent);}
+.toast.show{display:block;animation:rise .3s ease both;}
+.progress{display:flex;gap:6px;margin-bottom:24px;}
+.dot{width:6px;height:6px;border-radius:3px;background:var(--border);transition:all .3s;}
+.dot.active{background:var(--accent);width:18px;}
+.resend-row{font-size:12px;color:var(--muted);margin-top:14px;text-align:center;}
+.resend-row button{background:none;border:none;color:var(--accent);font-family:'Sora',sans-serif;font-size:12px;cursor:pointer;padding:0;}
+.resend-row button:disabled{opacity:.4;cursor:not-allowed;}
+#countdown{font-family:'JetBrains Mono',monospace;}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="page">
+  <header>
+    <div class="logo-box"><span>P</span></div>
+    <span class="logo-name">Pulse</span>
+    <span class="logo-chip">Marketing</span>
+  </header>
+
+  <main>
+    <div class="card">
+
+      <!-- STEP 1 -->
+      <div class="step active" id="step1">
+        <div class="progress"><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="icon-ring">🔑</div>
+        <h1>Reset your password</h1>
+        <p class="sub">Enter your work email and we'll send a 6-digit verification code.</p>
+        <div id="toast1" class="toast"></div>
+        <div class="field">
+          <label>Work email</label>
+          <input id="email" type="email" placeholder="you@company.com"/>
+        </div>
+        <button class="btn" id="sendBtn" onclick="sendCode()">Send code →</button>
+        <br>
+        <a href="login.html" class="back">← Back to sign in</a>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step" id="step2">
+        <div class="progress"><div class="dot"></div><div class="dot active"></div><div class="dot"></div></div>
+        <div class="icon-ring">📬</div>
+        <h1>Check your inbox</h1>
+        <p class="sub">Enter the 6-digit code sent to <b id="emailDisplay"></b></p>
+        <div id="toast2" class="toast"></div>
+        <div class="otp-group">
+          <input class="otp-box" id="o1" maxlength="1" inputmode="numeric"/>
+          <input class="otp-box" id="o2" maxlength="1" inputmode="numeric"/>
+          <input class="otp-box" id="o3" maxlength="1" inputmode="numeric"/>
+          <input class="otp-box" id="o4" maxlength="1" inputmode="numeric"/>
+          <input class="otp-box" id="o5" maxlength="1" inputmode="numeric"/>
+          <input class="otp-box" id="o6" maxlength="1" inputmode="numeric"/>
+        </div>
+        <button class="btn" id="verifyBtn" onclick="verifyCode()">Verify code →</button>
+        <button class="btn-ghost" onclick="goStep(1)">← Change email</button>
+        <div class="resend-row">
+          Didn't get it?
+          <button id="resendBtn" onclick="resendCode()" disabled>
+            Resend in <span id="countdown">60</span>s
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step" id="step3">
+        <div class="progress"><div class="dot"></div><div class="dot"></div><div class="dot active"></div></div>
+        <div class="icon-ring">🔒</div>
+        <h1>New password</h1>
+        <p class="sub">Choose a strong password for your account.</p>
+        <div id="toast3" class="toast"></div>
+        <div class="field">
+          <label>New password</label>
+          <div class="input-wrap">
+            <input id="newpwd" type="password" placeholder="••••••••" oninput="checkStrength(this.value)"/>
+          </div>
+          <div class="strength-bar"><div id="s1"></div><div id="s2"></div><div id="s3"></div><div id="s4"></div></div>
+          <div class="hint">8+ chars, 1 uppercase, 1 number</div>
+        </div>
+        <div class="field">
+          <label>Confirm password</label>
+          <input id="confirmpwd" type="password" placeholder="••••••••"/>
+        </div>
+        <button class="btn" onclick="resetPassword()">Update password →</button>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="step" id="step4">
+        <div class="success-icon">✓</div>
+        <h1 style="text-align:center">Password updated</h1>
+        <p class="sub" style="text-align:center">Your password has been reset. You can now sign in with your new credentials.</p>
+        <button class="btn" onclick="window.location.href='login.html'">Go to sign in →</button>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+const API = "http://127.0.0.1:8000";
+let _email = "";
+let _resendTimer = null;
+
+function goStep(n){
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+}
+
+function showToast(id, msg, type = 'error'){
+  const t = document.getElementById(id);
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function checkStrength(val){
+  const bars = ['s1','s2','s3','s4'].map(id => document.getElementById(id));
+  bars.forEach(b => b.style.background = 'var(--border)');
+  let score = 0;
+  if(val.length >= 8) score++;
+  if(/[A-Z]/.test(val)) score++;
+  if(/[0-9]/.test(val)) score++;
+  if(/[^A-Za-z0-9]/.test(val)) score++;
+  const colors = ['var(--danger)','#f59e0b','var(--accent-2)','var(--accent)'];
+  for(let i = 0; i < score; i++) bars[i].style.background = colors[score - 1];
+}
+
+// OTP box auto-advance
+const otpIds = ['o1','o2','o3','o4','o5','o6'];
+otpIds.forEach((id, i) => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    el.value = el.value.replace(/\D/g,'');
+    if(el.value && i < otpIds.length - 1)
+      document.getElementById(otpIds[i+1]).focus();
+  });
+  el.addEventListener('keydown', e => {
+    if(e.key === 'Backspace' && !el.value && i > 0)
+      document.getElementById(otpIds[i-1]).focus();
+  });
+});
+
+function startCountdown(){
+  let sec = 60;
+  const btn = document.getElementById('resendBtn');
+  const cd  = document.getElementById('countdown');
+  btn.disabled = true;
+  cd.textContent = sec;
+  clearInterval(_resendTimer);
+  _resendTimer = setInterval(() => {
+    sec--;
+    cd.textContent = sec;
+    if(sec <= 0){
+      clearInterval(_resendTimer);
+      btn.disabled = false;
+      btn.textContent = 'Resend code';
+    }
+  }, 1000);
+}
+
+async function sendCode(){
+  const email = document.getElementById('email').value.trim();
+  if(!email || !email.includes('@')){ showToast('toast1','Please enter a valid email.'); return; }
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    const res = await fetch(`${API}/send-otp`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email})
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.detail || 'Failed to send OTP');
+
+    _email = email;
+    document.getElementById('emailDisplay').textContent = email;
+    goStep(2);
+    document.getElementById('o1').focus();
+    startCountdown();
+
+  } catch(err){
+    showToast('toast1', err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send code →';
+  }
+}
+
+async function resendCode(){
+  try {
+    const res = await fetch(`${API}/send-otp`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email: _email})
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.detail);
+    showToast('toast2','New code sent!','success');
+    startCountdown();
+  } catch(err){
+    showToast('toast2', err.message);
+  }
+}
+
+async function verifyCode(){
+  const otp = otpIds.map(id => document.getElementById(id).value).join('');
+  if(otp.length < 6){ showToast('toast2','Enter the full 6-digit code.'); return; }
+
+  const btn = document.getElementById('verifyBtn');
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+
+  try {
+    const res = await fetch(`${API}/verify-otp`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email: _email, otp})
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.detail || 'Verification failed');
+    goStep(3);
+    document.getElementById('newpwd').focus();
+  } catch(err){
+    showToast('toast2', err.message);
+    btn.disabled = false;
+    btn.textContent = 'Verify code →';
+  }
+}
+
+function resetPassword(){
+  const p = document.getElementById('newpwd').value;
+  const c = document.getElementById('confirmpwd').value;
+  if(p.length < 8){ showToast('toast3','Password must be at least 8 characters.'); return; }
+  if(p !== c){ showToast('toast3','Passwords do not match.'); return; }
+  // In production: call a /reset-password endpoint with the new hash
+  goStep(4);
+}
+</script>
+</body>
+</html>

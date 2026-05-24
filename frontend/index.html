@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Marketing Test</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+#ai-offer-banner {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 9999;
+  animation: slideIn 0.4s ease;
+}
+
+.offer-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+  border: 1px solid #eaeaea;
+  font-family: 'Segoe UI', sans-serif;
+  width: 300px;
+  position: relative;
+}
+
+.offer-icon {
+  background: #eef4ff;
+  color: #2563eb;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.offer-content {
+  flex: 1;
+}
+
+.offer-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #111;
+  margin-bottom: 4px;
+}
+
+.offer-message {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.offer-btn {
+  padding: 6px 12px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.offer-btn:hover {
+  background: #1d4ed8;
+}
+
+.offer-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #999;
+}
+
+.offer-close:hover {
+  color: #000;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+</style>
+</head>
+<body>
+
+<h1>Welcome to Test Website</h1>
+<button>Click Me</button>
+
+<script src="tracker.js"></script>
+
+</body>
+</html>

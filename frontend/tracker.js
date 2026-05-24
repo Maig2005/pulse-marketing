@@ -1,0 +1,135 @@
+(function() {
+
+  // ----------------------------
+  // SESSION ID
+  // ----------------------------
+  function getSessionId() {
+    let sessionId = localStorage.getItem("session_id");
+
+    if (!sessionId) {
+      sessionId = "sess_" + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem("session_id", sessionId);
+    }
+
+    return sessionId;
+  }
+
+  // ----------------------------
+  // SEND EVENT
+  // ----------------------------
+  function sendEvent(eventType) {
+    fetch("http://127.0.0.1:8000/track", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        event_type: eventType,
+        timestamp: Date.now(),
+        page: window.location.pathname,
+        session_id: getSessionId()
+      })
+    });
+  }
+
+  // ----------------------------
+  // DECISION FETCH
+  // ----------------------------
+  function getDecision() {
+    const sessionId = getSessionId();
+
+    fetch(`http://127.0.0.1:8000/decision/${sessionId}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("Decision:", data);
+
+        if (data.action === "show_offer") {
+          showOffer(data.message);
+        } 
+        else if (data.action === "show_chatbot") {
+          showChatbot();
+        }
+      });
+  }
+
+  // ----------------------------
+  // UI ACTIONS
+  // ----------------------------
+function showOffer(message) {
+  const old = document.getElementById("ai-offer-banner");
+  if (old) old.remove();
+
+  let banner = document.createElement("div");
+  banner.id = "ai-offer-banner";
+
+  banner.innerHTML = `
+    <div class="offer-card">
+      
+      <div class="offer-icon">
+        <i class="fas fa-tag"></i>
+      </div>
+
+      <div class="offer-content">
+        <div class="offer-title">Special Offer</div>
+        <div class="offer-message">${message}</div>
+
+        <button class="offer-btn" onclick="handleCTA()">
+          Claim Offer
+        </button>
+      </div>
+
+      <div class="offer-close" onclick="this.parentElement.parentElement.remove()">
+        &times;
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(banner);
+}
+
+  function showChatbot() {
+    alert("Need help? Chat with us!");
+  }
+
+  // ----------------------------
+  // MAIN ENTRY POINT
+  // ----------------------------
+  window.onload = () => {
+    sendEvent("page_view");
+
+    // wait a bit before decision
+    setTimeout(() => {
+      getDecision();
+    }, 1000);
+  };
+
+  // ----------------------------
+  // CLICK TRACKING
+  // ----------------------------
+  document.addEventListener("click", () => {
+    sendEvent("click");
+  });
+
+})();
+
+function handleCTA() {
+  fetch("http://127.0.0.1:8000/track", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      event_type: "cta_click",
+      timestamp: Date.now(),
+      page: window.location.pathname,
+      session_id: localStorage.getItem("session_id")
+    })
+  });
+
+  alert("Redirecting to your offer...");
+
+  setTimeout(() => {
+    window.location.href = "https://example.com";
+  }, 1000);
+}
