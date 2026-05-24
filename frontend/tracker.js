@@ -15,7 +15,7 @@
   }
 
   // ----------------------------
-  // SEND EVENT (fire-and-forget)
+  // SEND EVENT
   // ----------------------------
   function sendEvent(eventType) {
     fetch(API + "/track", {
@@ -23,11 +23,14 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         event_type: eventType,
-        timestamp: Date.now(),
-        page: window.location.pathname,
-        session_id: getSessionId()
+        page: window.location.href, // ✅ FIXED
+        timestamp: new Date().toISOString(), // ✅ FIXED
+        session_id: getSessionId() // ✅ FIXED
       })
-    }).catch(() => {}); // silently ignore failures
+    })
+    .then(res => res.json())
+    .then(data => console.log("TRACK:", data))
+    .catch((e) => console.error("TRACK ERROR:", e)); // ✅ SHOW ERRORS
   }
 
   // ----------------------------
@@ -36,19 +39,18 @@
   function getDecision() {
     const sessionId = getSessionId();
 
-    fetch("https://pulse-marketing.onrender.com/decision/" + sessionId)
-      .then(res => {
-        if (!res.ok) throw new Error("Non-OK response");
-        return res.json();
-      })
+    fetch(API + "/decision/" + sessionId)
+      .then(res => res.json())
       .then(data => {
+        console.log("DECISION:", data); // DEBUG
+
         if (data.action === "show_offer") {
           showOffer(data.message);
         } else if (data.action === "show_chatbot") {
           showChatbot();
         }
       })
-      .catch(() => {}); // silently ignore if backend unavailable
+      .catch((e) => console.error("DECISION ERROR:", e));
   }
 
   // ----------------------------
@@ -62,16 +64,10 @@
     banner.id = "ai-offer-banner";
 
     banner.innerHTML = `
-      <div class="offer-card">
-        <div class="offer-icon">
-          <i class="fas fa-tag"></i>
-        </div>
-        <div class="offer-content">
-          <div class="offer-title">Special Offer</div>
-          <div class="offer-message">${message}</div>
-          <button class="offer-btn" onclick="handleCTA()">Claim Offer</button>
-        </div>
-        <div class="offer-close" onclick="this.parentElement.parentElement.remove()">&times;</div>
+      <div style="position:fixed;bottom:20px;right:20px;background:#fff;padding:15px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);z-index:9999;">
+        <div><b>🔥 Special Offer</b></div>
+        <div>${message}</div>
+        <button onclick="handleCTA()" style="margin-top:10px;">Claim Offer</button>
       </div>
     `;
 
@@ -87,7 +83,7 @@
   // ----------------------------
   window.addEventListener("load", () => {
     sendEvent("page_view");
-    setTimeout(() => { getDecision(); }, 1000);
+    setTimeout(getDecision, 1000);
   });
 
   // ----------------------------
@@ -100,22 +96,27 @@
 })();
 
 // ----------------------------
-// CTA HANDLER (global scope)
+// CTA HANDLER (GLOBAL)
 // ----------------------------
 function handleCTA() {
+
+  const sessionId = localStorage.getItem("session_id"); // ✅ FIX
+
   fetch("https://pulse-marketing.onrender.com/track", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    session_id: sessionId,
-    event_type: "click",
-    page_url: window.location.href,
-    timestamp: new Date().toISOString()
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      event_type: "click",
+      page: window.location.href, // ✅ FIXED
+      timestamp: new Date().toISOString(), // ✅ FIXED
+      session_id: sessionId // ✅ FIXED
+    })
   })
-});
-  
+  .then(res => res.json())
+  .then(data => console.log("CTA TRACK:", data))
+  .catch(err => console.error("CTA ERROR:", err));
 
   alert("Redirecting to your offer...");
   setTimeout(() => { window.location.href = "https://amazon.com"; }, 1000);
