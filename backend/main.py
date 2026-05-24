@@ -47,8 +47,8 @@ import os
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
-SMTP_USER = os.getenv("mainakg2005@gmail.com")
-SMTP_PASSWORD = os.getenv("yyyb nnei hsnt zazi")
+SMTP_USER = os.getenv("SMTP_USER")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SENDER_NAME = "Pulse Marketing"
 
 # ── In-memory OTP store  { email: { "otp": "1234", "expires": timestamp } } ──
@@ -157,6 +157,7 @@ def _send_otp_email(to_email: str, otp: str, purpose: str = "verification"):
 
 @app.post("/send-otp")
 def send_otp(payload: OTPRequest):
+    import smtplib
     """Generate a 6-digit OTP, store it, and email it to the user."""
     email = payload.email.strip().lower()
     if not email or "@" not in email:
