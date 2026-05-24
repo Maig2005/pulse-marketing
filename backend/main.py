@@ -84,72 +84,33 @@ class OTPVerify(BaseModel):
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _send_otp_email(to_email: str, otp: str, purpose: str = "verification"):
-    """Send a styled OTP email via Gmail SMTP."""
+    print("SMTP USER:", SMTP_USER)
+    print("SMTP PASS:", SMTP_PASSWORD)
 
-    subject = f"Your Pulse {purpose} code: {otp}"
+    subject = f"Pulse OTP for {purpose}"
+    body = f"Your OTP is: {otp}"
 
-    html = f"""
-    <div style="background:#0b0d12;padding:40px 20px;font-family:'Segoe UI',sans-serif;">
-      <div style="max-width:420px;margin:0 auto;background:#11141b;border:1px solid #1f2430;
-                  border-radius:16px;padding:36px 32px;">
-
-        <!-- Logo -->
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;">
-          <div style="width:32px;height:32px;border-radius:8px;background:#10b981;
-                      display:flex;align-items:center;justify-content:center;">
-            <span style="font-weight:800;font-size:14px;color:#04130c;">P</span>
-          </div>
-          <span style="font-weight:600;font-size:16px;color:#e6e9ef;">Pulse</span>
-          <span style="font-size:11px;padding:2px 8px;border-radius:6px;
-                       background:#161a23;border:1px solid #1f2430;color:#8a93a6;">
-            Marketing
-          </span>
-        </div>
-
-        <h2 style="color:#e6e9ef;font-size:20px;font-weight:600;
-                   letter-spacing:-0.02em;margin:0 0 8px;">
-          Your {purpose} code
-        </h2>
-        <p style="color:#8a93a6;font-size:13px;margin:0 0 28px;line-height:1.6;">
-          Use the code below to complete your {purpose}. 
-          It expires in <strong style="color:#e6e9ef;">5 minutes</strong>.
-        </p>
-
-        <!-- OTP Box -->
-        <div style="background:#161a23;border:1px solid #1f2430;border-radius:12px;
-                    padding:24px;text-align:center;margin-bottom:24px;">
-          <div style="font-family:'Courier New',monospace;font-size:36px;font-weight:700;
-                      letter-spacing:0.18em;color:#10b981;">
-            {otp}
-          </div>
-        </div>
-
-        <p style="color:#8a93a6;font-size:12px;line-height:1.6;margin:0;">
-          If you didn't request this, you can safely ignore this email.<br/>
-          Never share this code with anyone.
-        </p>
-
-        <div style="margin-top:28px;padding-top:20px;border-top:1px solid #1f2430;">
-          <p style="color:#4b5563;font-size:11px;margin:0;">
-            Pulse Marketing Platform · Sent automatically
-          </p>
-        </div>
-      </div>
-    </div>
-    """
-
-    msg = MIMEMultipart("alternative")
+    msg = MIMEText(body)
     msg["Subject"] = subject
-    msg["From"]    = f"{SENDER_NAME} <{SMTP_USER}>"
-    msg["To"]      = to_email
-    msg.attach(MIMEText(html, "html"))
+    msg["From"] = SMTP_USER
+    msg["To"] = to_email
 
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-        server.ehlo()
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(SMTP_USER, to_email, msg.as_string())
+        print("Connecting to SMTP...")
 
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        print("LOGIN SUCCESS")
+
+        server.sendmail(SMTP_USER, to_email, msg.as_string())
+        print("EMAIL SENT")
+
+        server.quit()
+
+    except Exception as e:
+        print("EMAIL ERROR:", str(e))
+        raise
 
 # ══════════════════════════════════════════════════════════════════════════════
 # OTP ENDPOINTS
