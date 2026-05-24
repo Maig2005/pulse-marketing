@@ -87,34 +87,30 @@ class OTPVerify(BaseModel):
 # HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
 
+import requests
+
 def _send_otp_email(to_email: str, otp: str, purpose: str = "verification"):
-    try:
-        print("📧 Sending OTP to:", to_email)
+    API_KEY = os.getenv("RESEND_API_KEY")
 
-        subject = "Pulse OTP Verification"
-        body = f"Your OTP is: {otp}"
+    response = requests.post(
+        "https://api.resend.com/emails",
+        headers={
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "from": "Pulse <onboarding@resend.dev>",
+            "to": [to_email],
+            "subject": "Pulse OTP Verification",
+            "html": f"<h2>Your OTP is: {otp}</h2>"
+        }
+    )
 
-        msg = MIMEText(body)
-        msg["Subject"] = subject
-        msg["From"] = SMTP_USER
-        msg["To"] = to_email
+    if response.status_code != 200:
+        print("❌ EMAIL API ERROR:", response.text)
+        raise Exception("Email failed")
 
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-
-        print("🔐 Logging in SMTP...")
-        server.login(SMTP_USER, SMTP_PASSWORD)
-
-        print("📤 Sending email...")
-        server.sendmail(SMTP_USER, to_email, msg.as_string())
-
-        server.quit()
-
-        print("✅ EMAIL SENT SUCCESSFULLY")
-
-    except Exception as e:
-        print("❌ EMAIL ERROR:", str(e))
-        raise Exception(str(e))
+    print("✅ EMAIL SENT VIA RESEND")
 # ══════════════════════════════════════════════════════════════════════════════
 # OTP ENDPOINTS
 # ══════════════════════════════════════════════════════════════════════════════
